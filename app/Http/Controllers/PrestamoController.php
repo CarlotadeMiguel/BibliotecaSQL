@@ -5,24 +5,42 @@ namespace App\Http\Controllers;
 //App/Http/Controllers/PrestamoController
 
 use App\Models\Prestamo;
-use App\Models\Libro;
 use App\Models\Usuario;
+use App\Models\Libro;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Auth;
 
 class PrestamoController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     public function index()
     {
-        $prestamos = Prestamo::with('usuario', 'libro')->get();
+        if (Auth::user()->hasRole('admin')) {
+            $prestamos = Prestamo::with('usuario', 'libro')->get();
+        } else {
+            $prestamos = Prestamo::with('usuario', 'libro')
+                ->where('usuario_id', Auth::id())
+                ->get();
+        }
         return view('prestamos.index', compact('prestamos'));
     }
 
     public function create()
     {
-        $usuarios = Usuario::all();
-        $libros = Libro::all();
+        // Admin puede elegir cualquier usuario, usuario normal solo su perfil
+        // SQL: SELECT * FROM usuarios [si es admin]
+        if (Auth::user()->hasRole('admin')) {
+            $usuarios = Usuario::all();
+        } else {
+            $usuarios = collect([Auth::user()]);
+        }
+        // SQL: SELECT * FROM libros WHERE ejemplares > 0
+        $libros = Libro::where('ejemplares', '>', 0)->get();
         return view('prestamos.create', compact('usuarios', 'libros'));
     }
 
@@ -33,7 +51,6 @@ class PrestamoController extends Controller
             'libro_id' => 'required|exists:libros,id',
             'fecha_prestamo' => 'required|date',
             'fecha_devolucion' => 'nullable|date|after_or_equal:fecha_prestamo',
-            // No validar estado, se asigna internamente
         ]);
 
         try {
@@ -44,13 +61,11 @@ class PrestamoController extends Controller
                 return back()->withErrors(['libro_id' => 'No hay ejemplares disponibles para préstamo.'])->withInput();
             }
 
-            $validated['estado'] = 'prestado'; // Estado fijo
-
+            $validated['estado'] = 'prestado';
             Prestamo::create($validated);
             $libro->decrement('ejemplares');
 
             DB::commit();
-
             return redirect()->route('prestamos.index')->with('success', 'Préstamo registrado correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -60,13 +75,18 @@ class PrestamoController extends Controller
 
     public function show(Prestamo $prestamo)
     {
+        // SQL: SELECT * FROM prestamos WHERE id = ?
         $prestamo->load('usuario', 'libro');
         return view('prestamos.show', compact('prestamo'));
     }
 
     public function edit(Prestamo $prestamo)
     {
-        $usuarios = Usuario::all();
+        if (Auth::user()->hasRole('admin')) {
+            $usuarios = Usuario::all();
+        } else {
+            $usuarios = collect([Auth::user()]);
+        }
         $libros = Libro::all();
         return view('prestamos.edit', compact('prestamo', 'usuarios', 'libros'));
     }
@@ -91,13 +111,10 @@ class PrestamoController extends Controller
 
             $prestamo->update($validated);
 
-            // Si cambia de estado no devuelto a devuelto => incrementa ejemplares
             if (in_array($oldEstado, ['prestado', 'retrasado']) && $nuevoEstado === 'devuelto') {
                 $libro = Libro::lockForUpdate()->findOrFail($nuevoLibroId);
                 $libro->increment('ejemplares');
-            }
-            // Si cambia de devuelto a activo => decrementa ejemplares
-            elseif ($oldEstado === 'devuelto' && in_array($nuevoEstado, ['prestado', 'retrasado'])) {
+            } elseif ($oldEstado === 'devuelto' && in_array($nuevoEstado, ['prestado', 'retrasado'])) {
                 $libro = Libro::lockForUpdate()->findOrFail($nuevoLibroId);
                 if ($libro->ejemplares < 1) {
                     DB::rollBack();
@@ -106,13 +123,11 @@ class PrestamoController extends Controller
                 $libro->decrement('ejemplares');
             }
 
-            // Si cambia el libro y el préstamo está activo (no devuelto), ajustar ejemplares
             if ($oldLibroId != $nuevoLibroId && in_array($nuevoEstado, ['prestado', 'retrasado'])) {
                 $libroViejo = Libro::lockForUpdate()->findOrFail($oldLibroId);
                 $libroNuevo = Libro::lockForUpdate()->findOrFail($nuevoLibroId);
 
                 $libroViejo->increment('ejemplares');
-
                 if ($libroNuevo->ejemplares < 1) {
                     DB::rollBack();
                     return back()->withErrors(['libro_id' => 'No hay ejemplares disponibles en el libro nuevo para préstamo.'])->withInput();
@@ -121,7 +136,6 @@ class PrestamoController extends Controller
             }
 
             DB::commit();
-
             return redirect()->route('prestamos.index')->with('success', 'Préstamo actualizado correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -144,7 +158,6 @@ class PrestamoController extends Controller
             $prestamo->delete();
 
             DB::commit();
-
             return redirect()->route('prestamos.index')->with('success', 'Préstamo eliminado correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();
