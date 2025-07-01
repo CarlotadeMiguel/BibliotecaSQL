@@ -1,10 +1,16 @@
 -- index() - Listar préstamos con usuario y libro
-SELECT prestamos.*, usuarios.nombre AS nombre_usuario, libros.titulo AS titulo_libro
-FROM prestamos
-JOIN usuarios ON prestamos.usuario_id = usuarios.id
-JOIN libros ON prestamos.libro_id = libros.id;
+	-- Admin ve todos:
+	SELECT prestamos.*, usuarios.nombre AS nombre_usuario, libros.titulo AS titulo_libro
+	FROM prestamos
+	JOIN usuarios ON prestamos.usuario_id = usuarios.id
+	JOIN libros ON prestamos.libro_id = libros.id;
 
-
+	-- Usuario normal solo sus préstamos:
+	SELECT prestamos.*, usuarios.nombre AS nombre_usuario, libros.titulo AS titulo_libro
+	FROM prestamos
+	JOIN usuarios ON prestamos.usuario_id = usuarios.id
+	JOIN libros ON prestamos.libro_id = libros.id
+	WHERE prestamos.usuario_id = ?;
 -- store() - Crear un prestamo
 	-- verificar ejemplares disponibles
 		SELECT ejemplares FROM libros WHERE id = {id} FOR UPDATE;
