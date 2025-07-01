@@ -11,6 +11,7 @@ use Spatie\Permission\Traits\HasRoles;
 class Usuario extends Model
 {
     use HasRoles;
+    protected $guard_name = 'web';
     protected $fillable = ['nombre', 'email', 'telefono'];
 
     public function prestamos()
