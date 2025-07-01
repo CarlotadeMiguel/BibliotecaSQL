@@ -1,23 +1,32 @@
 <?php
-
 namespace App\Http\Controllers;
-
-//App/HttpControllers/LibroController
 
 use App\Models\Libro;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 
 class LibroController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin')->except(['index', 'show']);
+    }
+
     public function index()
     {
-        $libros = Libro::all();
+        if (Auth::user()->hasRole('admin')) {
+            $libros = Libro::all();
+        } else {
+            // Usuarios normales solo ven libros disponibles
+            $libros = Libro::where('ejemplares', '>', 0)->get();
+        }
         return view('libros.index', compact('libros'));
     }
 
     public function create()
     {
+        // Solo admin puede crear libros
         return view('libros.create');
     }
 
@@ -42,6 +51,7 @@ class LibroController extends Controller
 
     public function edit(Libro $libro)
     {
+        // Solo admin puede editar
         return view('libros.edit', compact('libro'));
     }
 
@@ -61,7 +71,7 @@ class LibroController extends Controller
 
     public function destroy(Libro $libro)
     {
-        // Podrías agregar verificación si el libro tiene préstamos activos antes de eliminar
+        // Solo admin puede eliminar
         $libro->delete();
 
         return redirect()->route('libros.index')->with('success', 'Libro eliminado correctamente');
