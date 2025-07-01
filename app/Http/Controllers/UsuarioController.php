@@ -1,17 +1,21 @@
 <?php
-
 namespace App\Http\Controllers;
-
-//app/Http/Contollers/UsuarioController
 
 use App\Models\Usuario;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 
 class UsuarioController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('role:admin'); // Solo admin puede gestionar usuarios
+    }
+
     public function index()
     {
+
         $usuarios = Usuario::all();
         return view('usuarios.index', compact('usuarios'));
     }
@@ -30,6 +34,7 @@ class UsuarioController extends Controller
         ]);
 
         try {
+
             Usuario::create($validated);
             return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
         } catch (\Exception $e) {
@@ -56,6 +61,7 @@ class UsuarioController extends Controller
         ]);
 
         try {
+
             $usuario->update($validated);
             return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
         } catch (\Exception $e) {
@@ -65,7 +71,6 @@ class UsuarioController extends Controller
 
     public function destroy(Usuario $usuario)
     {
-        // Verificar préstamos activos antes de eliminar usuario
         $prestamosActivos = $usuario->prestamos()->whereIn('estado', ['prestado', 'retrasado'])->count();
 
         if ($prestamosActivos > 0) {
