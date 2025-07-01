@@ -6,9 +6,11 @@ namespace App\Models;
 
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Traits\HasRoles;
 
 class Usuario extends Model
 {
+    use HasRoles;
     protected $fillable = ['nombre', 'email', 'telefono'];
 
     public function prestamos()
