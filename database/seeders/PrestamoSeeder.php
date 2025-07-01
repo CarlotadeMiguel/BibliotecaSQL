@@ -13,7 +13,7 @@ class PrestamoSeeder extends Seeder
     public function run()
     {
         // Obtener algunos usuarios y libros
-        $usuarios = Usuario::whereRoleIs('user')->get();
+        $usuarios = Usuario::role('user')->get();
         $libros   = Libro::all();
 
         $prestamos = [
