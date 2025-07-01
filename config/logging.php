@@ -51,6 +51,11 @@ return [
     */
 
     'channels' => [
+        'sql' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/sql.log'),
+            'level' => 'debug',
+        ],
 
         'stack' => [
             'driver' => 'stack',
