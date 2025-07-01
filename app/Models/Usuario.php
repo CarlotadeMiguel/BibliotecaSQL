@@ -7,12 +7,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Traits\HasRoles;
+use Laravel\Sanctum\HasApiTokens;
 
 class Usuario extends Model
 {
-    use HasRoles;
+    use HasRoles, HasApiTokens;
     protected $guard_name = 'web';
-    protected $fillable = ['nombre', 'email', 'telefono'];
+    protected $fillable = ['nombre', 'email', 'telefono', 'password'];
 
     public function prestamos()
     {
