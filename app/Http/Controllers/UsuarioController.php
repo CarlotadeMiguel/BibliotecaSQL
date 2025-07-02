@@ -1,28 +1,29 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 
 class UsuarioController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:admin'); // Solo admin puede gestionar usuarios
+        $this->middleware('role:admin');
     }
 
     public function index()
     {
-
-        $usuarios = Usuario::all();
+        $usuarios = Usuario::paginate(10);
         return view('usuarios.index', compact('usuarios'));
     }
 
     public function create()
     {
-        return view('usuarios.create');
+        $roles = Role::pluck('name', 'name');
+        return view('usuarios.create', compact('roles'));
     }
 
     public function store(Request $request)
@@ -31,11 +32,14 @@ class UsuarioController extends Controller
             'nombre' => 'required|string|max:100',
             'email' => 'required|email|unique:usuarios,email',
             'telefono' => 'nullable|string|max:20',
+            'password' => 'required|string|confirmed|min:6',
+            'rol' => 'required|exists:roles,name',
         ]);
 
         try {
-
-            Usuario::create($validated);
+            $validated['password'] = bcrypt($validated['password']);
+            $usuario = Usuario::create($validated);
+            $usuario->syncRoles([$validated['rol']]);
             return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Error al crear el usuario: ' . $e->getMessage()])->withInput();
@@ -49,7 +53,9 @@ class UsuarioController extends Controller
 
     public function edit(Usuario $usuario)
     {
-        return view('usuarios.edit', compact('usuario'));
+        $roles = Role::pluck('name', 'name');
+        $userRole = $usuario->getRoleNames()->first();
+        return view('usuarios.edit', compact('usuario', 'roles', 'userRole'));
     }
 
     public function update(Request $request, Usuario $usuario)
@@ -58,11 +64,12 @@ class UsuarioController extends Controller
             'nombre' => 'required|string|max:100',
             'email' => 'required|email|unique:usuarios,email,' . $usuario->id,
             'telefono' => 'nullable|string|max:20',
+            'rol' => 'required|exists:roles,name',
         ]);
 
         try {
-
             $usuario->update($validated);
+            $usuario->syncRoles([$validated['rol']]);
             return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Error al actualizar el usuario: ' . $e->getMessage()])->withInput();
@@ -72,7 +79,6 @@ class UsuarioController extends Controller
     public function destroy(Usuario $usuario)
     {
         $prestamosActivos = $usuario->prestamos()->whereIn('estado', ['prestado', 'retrasado'])->count();
-
         if ($prestamosActivos > 0) {
             return back()->withErrors(['error' => 'No se puede eliminar el usuario porque tiene préstamos activos.']);
         }
