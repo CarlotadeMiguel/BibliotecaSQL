@@ -17,3 +17,14 @@ WHERE id = {id};
 -- destroy() — Eliminar libro por ID
 DELETE FROM libros WHERE id = {id};
 
+-- Mostrar solo libros disponibles
+SELECT * FROM libros WHERE ejemplares > 0
+
+-- Consulta avanzada con JOINs para mostrar disponibilidad detallada
+SELECT l.*, COUNT(p.id) as prestamos_activos, 
+      (l.ejemplares - COUNT(p.id)) as disponibles_reales
+      FROM libros l
+      LEFT JOIN prestamos p ON l.id = p.libro_id 
+      AND p.estado IN ('prestado', 'retrasado')
+      GROUP BY l.id
+      HAVING disponibles_reales > 0
