@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Usuario;
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
@@ -46,9 +47,9 @@ class UsuarioSeeder extends Seeder
 
         // Crear usuarios normales
         $usuarios = [
-            ['nombre' => 'Ana García',    'email' => 'ana.garcia@example.com',    'telefono' => '600123456'],
-            ['nombre' => 'Luis Martínez', 'email' => 'luis.martinez@example.com', 'telefono' => '600234567'],
-            ['nombre' => 'María Ruiz',    'email' => 'maria.ruiz@example.com',    'telefono' => '600345678'],
+            ['nombre' => 'Ana García',    'email' => 'ana.garcia@example.com',    'telefono' => '600123456', 'password' => Hash::make('password123')],
+            ['nombre' => 'Luis Martínez', 'email' => 'luis.martinez@example.com', 'telefono' => '600234567', 'password' => Hash::make('password123')],
+            ['nombre' => 'María Ruiz',    'email' => 'maria.ruiz@example.com',    'telefono' => '600345678', 'password' => Hash::make('password123')],
         ];
 
         foreach ($usuarios as $data) {
@@ -61,6 +62,7 @@ class UsuarioSeeder extends Seeder
             'nombre'   => 'Admin Biblioteca',
             'email'    => 'admin@biblioteca.com',
             'telefono' => '600000000',
+            'password' => Hash::make('password123')
         ]);
         $admin->assignRole($adminRole); // Asignar rol 'admin'
     }
