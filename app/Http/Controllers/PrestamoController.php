@@ -21,26 +21,27 @@ class PrestamoController extends Controller
     public function index()
     {
         if (Auth::user()->hasRole('admin')) {
-            $prestamos = Prestamo::with('usuario', 'libro')->get();
+            $prestamos = Prestamo::with('usuario', 'libro')->paginate(10);
         } else {
             $prestamos = Prestamo::with('usuario', 'libro')
                 ->where('usuario_id', Auth::id())
-                ->get();
+                ->paginate(10);
         }
+        
         return view('prestamos.index', compact('prestamos'));
     }
 
     public function create()
     {
-        // Admin puede elegir cualquier usuario, usuario normal solo su perfil
-        // SQL: SELECT * FROM usuarios [si es admin]
         if (Auth::user()->hasRole('admin')) {
             $usuarios = Usuario::all();
         } else {
             $usuarios = collect([Auth::user()]);
         }
-        // SQL: SELECT * FROM libros WHERE ejemplares > 0
+        
+        // Solo libros con ejemplares disponibles
         $libros = Libro::where('ejemplares', '>', 0)->get();
+        
         return view('prestamos.create', compact('usuarios', 'libros'));
     }
 
@@ -75,7 +76,6 @@ class PrestamoController extends Controller
 
     public function show(Prestamo $prestamo)
     {
-        // SQL: SELECT * FROM prestamos WHERE id = ?
         $prestamo->load('usuario', 'libro');
         return view('prestamos.show', compact('prestamo'));
     }
@@ -87,7 +87,10 @@ class PrestamoController extends Controller
         } else {
             $usuarios = collect([Auth::user()]);
         }
+        
+        // Todos los libros (para poder cambiar el libro en edición)
         $libros = Libro::all();
+        
         return view('prestamos.edit', compact('prestamo', 'usuarios', 'libros'));
     }
 
