@@ -34,6 +34,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('libros/disponibilidad-detallada', [LibroController::class,'disponibilidadDetallada'])
          ->name('libros.disponibilidad-detallada');
 
+    // Ruta de búsqueda avanzada
+    Route::get('libros/buscar', [LibroController::class, 'buscar'])
+         ->name('libros.buscar');
+
     // 2) Luego el CRUD genérico de recursos
     Route::resource('libros', LibroController::class);
     // Rutas accesibles solo por administradores

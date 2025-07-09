@@ -6,6 +6,12 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
     <h1 class="mb-2 mb-md-0">📚 Libros</h1>
 
+    <form action="{{ route('libros.buscar') }}" method="GET" class="d-flex">
+    <input type="text" name="q" class="form-control form-control-sm me-2"
+           placeholder="Buscar..." value="{{ request('q') }}">
+    <button class="btn btn-outline-primary btn-sm">🔍</button>
+  </form>
+
     <div class="btn-group" role="group" aria-label="Acciones de libros">
         <a href="{{ route('libros.disponibles') }}" class="btn btn-outline-success btn-sm me-2">
             ✅ Solo disponibles

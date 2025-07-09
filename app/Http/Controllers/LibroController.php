@@ -155,4 +155,24 @@ class LibroController extends Controller
 
         return view('libros.disponibilidad-detallada', compact('libros'));
     }
+
+    public function buscar(Request $request)
+{
+    // Recoge el término de búsqueda
+    $q = $request->input('q');
+
+    // Construye la consulta Eloquent
+    $libros = Libro::when($q, function($query, $q) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('titulo', 'LIKE', "%{$q}%")
+                    ->orWhere('autor', 'LIKE', "%{$q}%")
+                    ->orWhere('isbn', 'LIKE', "%{$q}%");
+            });
+        })
+        ->orderBy('titulo')
+        ->paginate(10)
+        ->appends(['q' => $q]);
+
+    return view('libros.resultados', compact('libros','q'));
+}
 }
