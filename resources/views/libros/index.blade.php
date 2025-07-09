@@ -8,12 +8,12 @@
     <a href="{{ route('libros.disponibles') }}" class="btn btn-outline-success btn-sm">
     Ver solo disponibles
 </a>
-    @can('role', 'admin')
-        <a href="{{ route('libros.create') }}" class="btn btn-primary">➕ Nuevo Libro</a>
-        <a href="{{ route('libros.disponibilidad-detallada') }}" class="btn btn-outline-info btn-sm">
+@role('admin')
+    <a href="{{ route('libros.create') }}" class="btn btn-primary">➕ Nuevo Libro</a>
+    <a href="{{ route('libros.disponibilidad-detallada') }}" class="btn btn-outline-info btn-sm">
         Disponibilidad detallada
     </a>
-    @endcan
+@endrole
 </div>
 
 <div class="table-responsive">
@@ -42,7 +42,7 @@
                     </td>
                     <td>
                         <a href="{{ route('libros.show', $libro) }}" class="btn btn-sm btn-info">👁️ Ver</a>
-                        @can('role', 'admin')
+                        @role('admin')
                             <a href="{{ route('libros.edit', $libro) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
                             <form action="{{ route('libros.destroy', $libro) }}" method="POST" class="d-inline">
                                 @csrf
@@ -50,7 +50,7 @@
                                 <button type="submit" class="btn btn-sm btn-danger" 
                                         onclick="return confirm('¿Estás seguro?')">🗑️ Eliminar</button>
                             </form>
-                        @endcan
+                        @endrole
                     </td>
                 </tr>
             @empty

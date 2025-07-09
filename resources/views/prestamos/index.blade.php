@@ -44,23 +44,26 @@
                                 <span class="badge bg-secondary">{{ ucfirst($prestamo->estado) }}</span>
                         @endswitch
                     </td>
+               
                     <td>
-    <a href="{{ route('prestamos.show', $prestamo) }}" class="btn btn-info btn-sm">Ver</a>
-    <a href="{{ route('prestamos.edit', $prestamo) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{{ route('prestamos.show', $prestamo) }}" class="btn btn-info btn-sm">Ver</a>
+                        @role('admin')
+                        <a href="{{ route('prestamos.edit', $prestamo) }}" class="btn btn-warning btn-sm">Editar</a>
 
-    {{-- Sólo mostrar “Eliminar” cuando esté devuelto --}}
-    @if($prestamo->estado === 'devuelto')
-        <form action="{{ route('prestamos.destroy', $prestamo) }}" method="POST" class="d-inline">
-            @csrf
-            @method('DELETE')
-            <button type="submit"
-                    class="btn btn-danger btn-sm"
-                    onclick="return confirm('¿Eliminar préstamo?')">
-                Eliminar
-            </button>
-        </form>
-    @endif
-</td>
+                        {{-- Sólo mostrar “Eliminar” cuando esté devuelto --}}
+                        @if($prestamo->estado === 'devuelto')
+                            <form action="{{ route('prestamos.destroy', $prestamo) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="btn btn-danger btn-sm"
+                                        onclick="return confirm('¿Eliminar préstamo?')">
+                                    Eliminar
+                                </button>
+                            </form>
+                        @endif
+                    </td>
+    @endrole
                 </tr>
             @empty
                 <tr>

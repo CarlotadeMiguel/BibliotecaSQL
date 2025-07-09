@@ -60,7 +60,7 @@
                 @endif
             </div>
         </div>
-        
+        @role('admin')
         <div class="mt-3">
             <a href="{{ route('prestamos.edit', $prestamo) }}" class="btn btn-warning">Editar</a>
             {{-- Sólo mostrar “Eliminar” cuando esté devuelto --}}
@@ -73,6 +73,7 @@
             </form>
             @endif
         </div>
+        @endrole
     </div>
 </div>
 @endsection
