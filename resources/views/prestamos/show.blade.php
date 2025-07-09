@@ -63,12 +63,15 @@
         
         <div class="mt-3">
             <a href="{{ route('prestamos.edit', $prestamo) }}" class="btn btn-warning">Editar</a>
+            {{-- Sólo mostrar “Eliminar” cuando esté devuelto --}}
+            @if($prestamo->estado === 'devuelto')
             <form action="{{ route('prestamos.destroy', $prestamo) }}" method="POST" class="d-inline">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar préstamo?')">
                     Eliminar
                 </button>
             </form>
+            @endif
         </div>
     </div>
 </div>

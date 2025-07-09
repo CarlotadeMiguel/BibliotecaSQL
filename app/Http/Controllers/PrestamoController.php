@@ -148,23 +148,32 @@ class PrestamoController extends Controller
 
     public function destroy(Request $request, Prestamo $prestamo)
     {
+        // Si está aún prestado, no se elimina
+        if ($prestamo->estado === 'prestado') {
+            return back()->withErrors([
+                'error' => 'No se puede eliminar un préstamo mientras siga en estado “prestado”.'
+            ]);
+        }
+    
         try {
             DB::beginTransaction();
-
-            if (in_array($prestamo->estado, ['prestado', 'retrasado'])) {
-                if ($request->input('confirmar_incremento')) {
-                    $libro = Libro::lockForUpdate()->findOrFail($prestamo->libro_id);
-                    $libro->increment('ejemplares');
-                }
+    
+            // Si está devuelto o retrasado, al eliminar se reincrementa stock
+            if (in_array($prestamo->estado, ['devuelto', 'retrasado'])) {
+                $libro = Libro::lockForUpdate()->findOrFail($prestamo->libro_id);
+                $libro->increment('ejemplares');
             }
-
+    
             $prestamo->delete();
-
             DB::commit();
-            return redirect()->route('prestamos.index')->with('success', 'Préstamo eliminado correctamente.');
+    
+            return redirect()->route('prestamos.index')
+                             ->with('success', 'Préstamo eliminado correctamente.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Error al eliminar el préstamo: ' . $e->getMessage()]);
+            return back()->withErrors([
+                'error' => 'Error al eliminar el préstamo: ' . $e->getMessage()
+            ]);
         }
     }
 }

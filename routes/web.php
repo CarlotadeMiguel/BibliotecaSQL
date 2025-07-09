@@ -29,9 +29,13 @@ Route::post('register', [RegisterController::class, 'register']);
 // Todas las rutas siguientes requieren estar autenticado
 Route::middleware(['auth'])->group(function () {
 
-    // CRUD de libros para cualquier usuario autenticado
-    Route::resource('libros', LibroController::class);
+    Route::get('libros/disponibles', [LibroController::class,'disponibles'])
+         ->name('libros.disponibles');
+    Route::get('libros/disponibilidad-detallada', [LibroController::class,'disponibilidadDetallada'])
+         ->name('libros.disponibilidad-detallada');
 
+    // 2) Luego el CRUD genérico de recursos
+    Route::resource('libros', LibroController::class);
     // Rutas accesibles solo por administradores
     Route::middleware(['role:admin'])->group(function () {
         Route::resource('usuarios', UsuarioController::class);
@@ -42,4 +46,5 @@ Route::middleware(['auth'])->group(function () {
 
     // CRUD de préstamos (index, create, store, show, edit, update, destroy)
     Route::resource('prestamos', PrestamoController::class);
+    
 });

@@ -5,8 +5,14 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>📚 Libros</h1>
+    <a href="{{ route('libros.disponibles') }}" class="btn btn-outline-success btn-sm">
+    Ver solo disponibles
+</a>
     @can('role', 'admin')
         <a href="{{ route('libros.create') }}" class="btn btn-primary">➕ Nuevo Libro</a>
+        <a href="{{ route('libros.disponibilidad-detallada') }}" class="btn btn-outline-info btn-sm">
+        Disponibilidad detallada
+    </a>
     @endcan
 </div>
 

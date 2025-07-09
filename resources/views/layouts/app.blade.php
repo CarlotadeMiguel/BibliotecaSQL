@@ -18,11 +18,18 @@
                         <a class="nav-link" href="{{ route('libros.index') }}">Libros</a>
                         <a class="nav-link" href="{{ route('usuarios.index') }}">Usuarios</a>
                         <a class="nav-link" href="{{ route('prestamos.index') }}">Préstamos</a>
-                    @else
+                        <a class="nav-link {{ request()->routeIs('libros.disponibilidad-detallada') ? 'active' : '' }}"
+                           href="{{ route('libros.disponibilidad-detallada') }}">
+                            Disponibilidad detallada
+                        </a>
+                        @else
                         <a class="nav-link" href="{{ route('libros.index') }}">Libros</a>
                         <a class="nav-link" href="{{ route('prestamos.index') }}">Mis Préstamos</a>
-                    @endif
-                    
+                        <a class="nav-link {{ request()->routeIs('libros.disponibles') ? 'active' : '' }}"
+                       href="{{ route('libros.disponibles') }}">
+                        Libros disponibles
+                    </a>
+                        @endif
                     {{-- Información del usuario y logout --}}
                     <div class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
