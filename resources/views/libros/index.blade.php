@@ -3,17 +3,22 @@
 @section('title', 'Listado de Libros')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>📚 Libros</h1>
-    <a href="{{ route('libros.disponibles') }}" class="btn btn-outline-success btn-sm">
-    Ver solo disponibles
-</a>
-@role('admin')
-    <a href="{{ route('libros.create') }}" class="btn btn-primary">➕ Nuevo Libro</a>
-    <a href="{{ route('libros.disponibilidad-detallada') }}" class="btn btn-outline-info btn-sm">
-        Disponibilidad detallada
-    </a>
-@endrole
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <h1 class="mb-2 mb-md-0">📚 Libros</h1>
+
+    <div class="btn-group" role="group" aria-label="Acciones de libros">
+        <a href="{{ route('libros.disponibles') }}" class="btn btn-outline-success btn-sm me-2">
+            ✅ Solo disponibles
+        </a>
+        @role('admin')
+            <a href="{{ route('libros.disponibilidad-detallada') }}" class="btn btn-outline-info btn-sm me-2">
+                📊 Detalle disponibilidad
+            </a>
+            <a href="{{ route('libros.create') }}" class="btn btn-primary btn-sm">
+                ➕ Nuevo Libro
+            </a>
+        @endrole
+    </div>
 </div>
 
 <div class="table-responsive">
