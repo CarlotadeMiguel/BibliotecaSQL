@@ -36,6 +36,7 @@
                 <h5>Información del Préstamo</h5>
                 <p><strong>Fecha de Préstamo:</strong> {{ $prestamo->fecha_prestamo }}</p>
                 <p><strong>Fecha de Devolución:</strong> {{ $prestamo->fecha_devolucion ?? 'No establecida' }}</p>
+                <p><strong>Plazo</strong>{{ $prestamo->plazo }}</p>
                 <p><strong>Estado:</strong> 
                     @switch($prestamo->estado)
                         @case('prestado')

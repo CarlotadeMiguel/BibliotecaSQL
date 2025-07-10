@@ -41,7 +41,13 @@ class PrestamoSeeder extends Seeder
         ];
 
         foreach ($prestamos as $data) {
+            // Calcular plazo inicial en días
+            $fechaPrestamo   = Carbon::parse($data['fecha_prestamo']);
+            $fechaDevolucion = Carbon::parse($data['fecha_devolucion']);
+            $data['plazo']   = $fechaPrestamo->diffInDays($fechaDevolucion);
+
             Prestamo::create($data);
+
             // Ajustar ejemplares en libro
             $libro = Libro::find($data['libro_id']);
             if (in_array($data['estado'], ['prestado','retrasado'])) {

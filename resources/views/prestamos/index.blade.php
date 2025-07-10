@@ -22,6 +22,7 @@
                 <th>Libro</th>
                 <th>Fecha Préstamo</th>
                 <th>Fecha Devolución</th>
+                <th>Plazo</th>
                 <th>Estado</th>
                 <th>Acciones</th>
             </tr>
@@ -34,6 +35,7 @@
                     <td>{{ $prestamo->libro->titulo }}</td>
                     <td>{{ $prestamo->fecha_prestamo }}</td>
                     <td>{{ $prestamo->fecha_devolucion ?? '-' }}</td>
+                    <td>{{ $prestamo->plazo }}</td>
                     <td>
                         @switch($prestamo->estado)
                             @case('prestado')

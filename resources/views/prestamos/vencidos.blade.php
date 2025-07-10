@@ -35,7 +35,7 @@
                 <td>{{ $p->libro->titulo }}</td>
                 <td>{{ $p->fecha_prestamo }}</td>
                 <td>{{ $p->fecha_devolucion }}</td>
-                <td>{{ now()->diffInDays($p->fecha_devolucion) }}</td>
+                <td>{{ $p->plazo }}</td>
                 <td><span class="badge bg-danger">{{ ucfirst($p->estado) }}</span></td>
             </tr>
             @endforeach

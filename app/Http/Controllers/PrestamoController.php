@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Models\Prestamo;
 use App\Models\Usuario;
 use App\Models\Libro;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +54,13 @@ class PrestamoController extends Controller
             'fecha_prestamo' => 'required|date',
             'fecha_devolucion' => 'nullable|date|after_or_equal:fecha_prestamo',
         ]);
+
+   // 1) Calcular plazo inicial
+   $fechaPrestamo  = Carbon::parse($validated['fecha_prestamo']);
+   $fechaDevolucion= $validated['fecha_devolucion']
+                    ? Carbon::parse($validated['fecha_devolucion'])
+                    : $fechaPrestamo->copy()->addDays(14);
+   $validated['plazo'] = $fechaPrestamo->diffInDays($fechaDevolucion);
 
         try {
             DB::beginTransaction();
@@ -103,6 +111,16 @@ class PrestamoController extends Controller
             'fecha_devolucion' => 'nullable|date|after_or_equal:fecha_prestamo',
             'estado' => 'required|in:prestado,devuelto,retrasado',
         ]);
+
+         // 1) Recalcular plazo si cambian fechas
+    $fechaPrestamo   = Carbon::parse($validated['fecha_prestamo']);
+    $fechaDevolucion = $validated['fecha_devolucion']
+                       ? Carbon::parse($validated['fecha_devolucion'])
+                       : null;
+    // Si no hay fecha_devolucion, mantener el plazo actual hasta agotar
+    if ($fechaDevolucion) {
+        $validated['plazo'] = $fechaPrestamo->diffInDays($fechaDevolucion);
+    }
 
         try {
             DB::beginTransaction();
