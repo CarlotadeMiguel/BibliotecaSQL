@@ -12,17 +12,15 @@
     <button class="btn btn-outline-primary btn-sm">🔍</button>
   </form>
 
-    <div class="btn-group" role="group" aria-label="Acciones de libros">
-        <a href="{{ route('libros.disponibles') }}" class="btn btn-outline-success btn-sm me-2">
-            ✅ Solo disponibles
+  <div class="d-flex gap-2">
+        <a href="{{ route('estadisticas.publicas') }}" class="btn btn-outline-warning">
+            🔥 Ver populares
+        </a>
+        <a href="{{ route('libros.disponibles') }}" class="btn btn-outline-success btn-sm">
+            Ver solo disponibles
         </a>
         @role('admin')
-            <a href="{{ route('libros.disponibilidad-detallada') }}" class="btn btn-outline-info btn-sm me-2">
-                📊 Detalle disponibilidad
-            </a>
-            <a href="{{ route('libros.create') }}" class="btn btn-primary btn-sm">
-                ➕ Nuevo Libro
-            </a>
+            <a href="{{ route('libros.create') }}" class="btn btn-primary">➕ Nuevo Libro</a>
         @endrole
     </div>
 </div>
