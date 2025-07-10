@@ -17,6 +17,9 @@
                     @if(Auth::user()->hasRole('admin'))
                         <a class="nav-link" href="{{ route('libros.index') }}">Libros</a>
                         <a class="nav-link" href="{{ route('usuarios.index') }}">Usuarios</a>
+                        <a class="nav-link {{ request()->routeIs('prestamos.vencidos') ? 'active' : '' }}" href="{{ route('prestamos.vencidos') }}">
+                            Préstamos vencidos
+                        </a>
                         <a class="nav-link" href="{{ route('prestamos.index') }}">Préstamos</a>
                         <a class="nav-link {{ request()->routeIs('libros.disponibilidad-detallada') ? 'active' : '' }}"
                            href="{{ route('libros.disponibilidad-detallada') }}">

@@ -46,8 +46,12 @@ Route::middleware(['auth'])->group(function () {
         // Mostrar todos los préstamos, vista de administrador
         Route::get('prestamos/all', [PrestamoController::class, 'adminIndex'])
              ->name('prestamos.admin');
-    });
-
+        Route::get('prestamos/vencidos', [PrestamoController::class, 'vencidos'])
+             ->name('prestamos.vencidos');
+        Route::post('prestamos/marcar-vencidos', [PrestamoController::class, 'marcarVencidos'])
+             ->name('prestamos.marcar-vencidos');
+     });
+     
     // CRUD de préstamos (index, create, store, show, edit, update, destroy)
     Route::resource('prestamos', PrestamoController::class);
     

@@ -176,4 +176,33 @@ class PrestamoController extends Controller
             ]);
         }
     }
+
+    /**
+ * Mostrar préstamos vencidos (no devueltos tras fecha_devolucion)
+ */
+public function vencidos()
+{
+    $prestamosVencidos = Prestamo::with(['usuario','libro'])
+        ->where('fecha_devolucion', '<', now())
+        ->where('estado', '!=', 'devuelto')
+        ->orderBy('fecha_devolucion', 'asc')
+        ->paginate(15);
+
+    return view('prestamos.vencidos', compact('prestamosVencidos'));
+}
+
+/**
+ * Marcar automáticamente como 'retrasado' los préstamos vencidos
+ */
+public function marcarVencidos()
+{
+    $affected = Prestamo::where('fecha_devolucion', '<', now())
+        ->where('estado', 'prestado')
+        ->update(['estado' => 'retrasado']);
+
+    return back()->with('success', "Se han marcado {$affected} préstamos como retrasados.");
+}
+
+
+
 }
