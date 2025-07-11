@@ -1,52 +1,144 @@
--- index() - Listar préstamos con usuario y libro
-	-- Admin ve todos:
-	SELECT prestamos.*, usuarios.nombre AS nombre_usuario, libros.titulo AS titulo_libro
-	FROM prestamos
-	JOIN usuarios ON prestamos.usuario_id = usuarios.id
-	JOIN libros ON prestamos.libro_id = libros.id;
 
-	-- Usuario normal solo sus préstamos:
-	SELECT prestamos.*, usuarios.nombre AS nombre_usuario, libros.titulo AS titulo_libro
-	FROM prestamos
-	JOIN usuarios ON prestamos.usuario_id = usuarios.id
-	JOIN libros ON prestamos.libro_id = libros.id
-	WHERE prestamos.usuario_id = ?;
--- store() - Crear un prestamo
-	-- verificar ejemplares disponibles
-		SELECT ejemplares FROM libros WHERE id = {id} FOR UPDATE;
-	--insertar prestamo
-		INSERT INTO prestamos (usuario_id, libro_id, fecha_prestamo, fecha_devolucion, estado, created_at, updated_at)
-VALUES ({usuario.id}, {libro.id}, '2025-06-30', NULL, 'prestado', NOW(), NOW());
-	-- actualizar ejemplares
-	UPDATE libros SET ejemplares = ejemplares - 1, updated_at = NOW() WHERE id = {libro.id};
+-- 1) index() – Listar préstamos con usuario y libro, paginados
 
--- show() — Mostrar un préstamo específico (por ID)
-SELECT * FROM prestamos WHERE id = {id};
+-- Para administradores: todos los préstamos
+SELECT p.id,
+       u.nombre AS usuario,
+       l.titulo AS libro,
+       p.fecha_prestamo,
+       p.fecha_devolucion,
+       p.estado
+FROM prestamos p
+JOIN usuarios u ON p.usuario_id = u.id
+JOIN libros   l ON p.libro_id   = l.id
+ORDER BY p.fecha_prestamo DESC
+LIMIT 10 OFFSET :offset;
 
--- update() — Actualizar préstamo existente
-	-- obtener estado y libro viejo (para comparar)
-	SELECT estado, libro_id FROM prestamos WHERE id = {id} FOR UPDATE;
-	-- actualizar préstamo
-	UPDATE prestamos
-	SET usuario_id = {usuario.id}, libro_id = {libro.id}, fecha_prestamo = {fecha_prestamo}, fecha_devolucion = {fecha_devolucion}, estado = {estado}, updated_at = NOW()
-	WHERE id = {id};
-	--Si cambia estado a devuelto, incrementar ejemplares
-	UPDATE libros SET ejemplares = ejemplares + 1, updated_at = NOW() WHERE id = {libro.id};
-	-- Si cambia estado de 'devuelto' a otro, disminuir ejemplares (verificar antes disponibilidad)
-	SELECT ejemplares FROM libros WHERE id = {libro.id} FOR UPDATE;
-	UPDATE libros SET ejemplares = ejemplares - 1, updated_at = NOW() WHERE id = {libro.id};
-	-- Si cambia el libro en el préstamo, ajustar ejemplares
-		-- Incrementar ejemplares en libro viejo
-		UPDATE libros SET ejemplares = ejemplares + 1, updated_at = NOW() WHERE id = {libro.id};
-		-- Verificar ejemplares libro nuevo
-		SELECT ejemplares FROM libros WHERE id = {libro.id} FOR UPDATE;
-		-- Disminuir ejemplares libro nuevo
-		UPDATE libros SET ejemplares = ejemplares - 1, updated_at = NOW() WHERE id = ?;
+-- Para usuarios normales: solo sus propios préstamos
+SELECT p.id,
+       u.nombre AS usuario,
+       l.titulo AS libro,
+       p.fecha_prestamo,
+       p.fecha_devolucion,
+       p.estado
+FROM prestamos p
+JOIN usuarios u ON p.usuario_id = u.id
+JOIN libros   l ON p.libro_id   = l.id
+WHERE p.usuario_id = :usuario_id
+ORDER BY p.fecha_prestamo DESC
+LIMIT 10 OFFSET :offset;
 
+-- ----------------------------------------
+-- 2) store() – Crear un préstamo
 
--- destroy() — Eliminar préstamo
-	--si el préstamo está activo (prestado o retrasado), incrementar ejemplares del libro:
-	UPDATE libros SET ejemplares = ejemplares + 1, updated_at = NOW() WHERE id = {libro.id};
-	-- eliminar préstamo
-	DELETE FROM prestamos WHERE id = {id};
+-- a) Verificar ejemplares disponibles (bloqueo)
+SELECT ejemplares
+  FROM libros
+ WHERE id = :libro_id
+ FOR UPDATE;
 
+-- b) Insertar préstamo
+INSERT INTO prestamos (
+    usuario_id,
+    libro_id,
+    fecha_prestamo,
+    fecha_devolucion,
+    estado,
+    created_at,
+    updated_at
+) VALUES (
+    :usuario_id,
+    :libro_id,
+    :fecha_prestamo,
+    :fecha_devolucion,   -- NULL o fecha prevista
+    'prestado',
+    NOW(),
+    NOW()
+);
+
+-- c) Decrementar ejemplares en libros
+UPDATE libros
+   SET ejemplares  = ejemplares - 1,
+       updated_at  = NOW()
+ WHERE id = :libro_id;
+
+-- ----------------------------------------
+-- 3) show() – Mostrar un préstamo específico
+
+SELECT p.*,
+       u.nombre AS usuario,
+       l.titulo AS libro
+FROM prestamos p
+JOIN usuarios u ON p.usuario_id = u.id
+JOIN libros   l ON p.libro_id   = l.id
+WHERE p.id = :id;
+
+-- ----------------------------------------
+-- 4) update() – Actualizar un préstamo existente
+
+-- a) Obtener estado y libro antiguo (bloqueo)
+SELECT estado, libro_id
+  FROM prestamos
+ WHERE id = :id
+ FOR UPDATE;
+
+-- b) Si cambia de ‘prestado’ a ‘devuelto’, incrementar stock
+UPDATE libros
+   SET ejemplares  = ejemplares + 1,
+       updated_at  = NOW()
+ WHERE id = :old_libro_id
+   AND :old_estado = 'prestado';
+
+-- c) Actualizar los datos del préstamo
+UPDATE prestamos
+   SET usuario_id       = :usuario_id,
+       libro_id         = :libro_id,
+       fecha_prestamo   = :fecha_prestamo,
+       fecha_devolucion = :fecha_devolucion,
+       estado           = :estado,
+       updated_at       = NOW()
+ WHERE id = :id;
+
+-- d) Si cambia a ‘prestado’ o ‘retrasado’, decrementar stock
+UPDATE libros
+   SET ejemplares  = ejemplares - 1,
+       updated_at  = NOW()
+ WHERE id = :libro_id
+   AND :estado IN ('prestado','retrasado');
+
+-- e) Si cambia de libro (ajustar en ambos libros)
+--    Incrementar en libro anterior (si aplicable)
+UPDATE libros
+   SET ejemplares  = ejemplares + 1,
+       updated_at  = NOW()
+ WHERE id = :old_libro_id
+   AND :old_libro_id != :libro_id
+   AND :old_estado IN ('prestado','retrasado');
+
+--    Decrementar en libro nuevo (si distinto)
+UPDATE libros
+   SET ejemplares  = ejemplares - 1,
+       updated_at  = NOW()
+ WHERE id = :libro_id
+   AND :old_libro_id != :libro_id
+   AND :estado IN ('prestado','retrasado');
+
+-- ----------------------------------------
+-- 5) destroy() – Eliminar un préstamo
+
+-- a) Obtener estado y libro (bloqueo)
+SELECT estado, libro_id
+  FROM prestamos
+ WHERE id = :id
+ FOR UPDATE;
+
+-- b) Si el préstamo está devuelto o retrasado, reincrementar stock
+UPDATE libros
+   SET ejemplares  = ejemplares + 1,
+       updated_at  = NOW()
+ WHERE id = :libro_id
+   AND :estado IN ('devuelto','retrasado');
+
+-- c) Eliminar el registro del préstamo
+DELETE FROM prestamos
+ WHERE id = :id;
