@@ -61,3 +61,10 @@ SELECT l.*, COUNT(p.id) as prestamos_activos,
       AND p.estado IN ('prestado', 'retrasado')
       GROUP BY l.id
       HAVING disponibles_reales > 0
+
+-- Búsqueda avanzada en libros (título, autor, categoría)
+SELECT *
+FROM libros
+WHERE titulo LIKE CONCAT('%', :busqueda, '%')
+   OR autor LIKE CONCAT('%', :busqueda, '%')
+   OR isbn LIKE CONCAT('%', :busqueda, '%');
